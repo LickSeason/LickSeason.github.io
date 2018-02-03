@@ -1,0 +1,15 @@
+body{
+  background-image: url('https://media3.giphy.com/media/l0ExjYv7E0qwMb8vS/giphy.gif');
+  background-size: cover;
+  font-family: cursive;
+}
+p{
+  border-top-style: groove;
+  border-bottom-style: groove;
+  text-indent: 33%;
+  color: white
+}
+
+h1,h2,h3,ul{
+  color: white
+}
