@@ -3,28 +3,30 @@ WITH CTE_Earliest_Shadow_Created AS (
         saer.APPLICATION_ID,
         saer.ELIG_APP_SEQ_ID,
         saer.ELIGIBILITY_DOCUMENT_TYPE,
-        MIN(saer.SHADOW_CREATED_ON_DATE) AS Earliest_Shadow_Created_On_Date
+        saer.rep_id,
+        MIN(saer.SHADOW_CREATE_DATE_TIME) AS Earliest_Shadow_Created_On_Date
     FROM
-        SHADOW_AUDIT_ELIG_RESPONSE saer
+        LI_NV_ODS.SHADOW_ELIGIBILITY_APPLICATION saer
     WHERE
         saer.DOCUMENT_STATUS_CODE = 'Y'
         AND saer.REP_ID IS NOT NULL
-        AND saer.ELIGIBILITY_DOCUMENT_TYPE = :eligibility_document_type
+        AND saer.ELIGIBILITY_DOCUMENT_TYPE = 'E1'
     GROUP BY
         saer.APPLICATION_ID,
         saer.ELIG_APP_SEQ_ID,
-        saer.ELIGIBILITY_DOCUMENT_TYPE
+        saer.ELIGIBILITY_DOCUMENT_TYPE,
+        saer.rep_id
 )
-
 SELECT
+	cte.rep_id AS CREATED_BY,
     cte.APPLICATION_ID,
     cte.ELIG_APP_SEQ_ID,
-    cte.ELIGIBILITY_DOCUMENT_TYPE,
-    cte.Earliest_Shadow_Created_On_Date,
+    cte.ELIGIBILITY_DOCUMENT_TYPE AS ELIG_PROGRAM,
+    cte.Earliest_Shadow_Created_On_Date AS APP_CREATION_DATE,
     cacil.API_ID
 FROM
     CTE_Earliest_Shadow_Created cte
 JOIN
-    CARRIER_API_ID_CREATION_LOG cacil
+    LI_NV_ODS.CARRIER_API_ID_CREATION_LOG cacil
 ON
-    cte.ELIG_APP_SEQ_ID = cacil.ELIG_APP_SEQ_ID;
+    cte.ELIG_APP_SEQ_ID = cacil.ELIG_APP_SEQ_ID
