@@ -1,0 +1,115 @@
+WITH RankedEmails AS (
+    SELECT
+        SAC,
+        CONTACT_EMAIL,
+        DATA_MONTH,
+        ROW_NUMBER() OVER (PARTITION BY SAC ORDER BY DATA_MONTH DESC) AS RowNum
+    FROM
+        LI_LCS_ODS.filing
+    WHERE
+        CONTACT_EMAIL IS NOT NULL
+)
+SELECT DISTINCT
+    a.LatestDate,
+    b.TRANSTYPE,
+    d.SPIN,
+    c.SACNAME,
+    b.SAC,
+    a.SUBSCRIBER_ID,
+    b.lexid,
+    E.CONTACT_EMAIL,
+    b.DEENROLLMENTCODE,
+    b.full_address
+FROM
+    (
+        SELECT
+            DISTINCT SUBSCRIBER_ID,
+            MAX(INSERTDATE) AS LatestDate
+        FROM
+            LI_ebbpsm_ODS.AUDIT_TRANSACTION
+        WHERE
+            TRANSSTATUS = 'VALID'
+            AND TRANSTYPE IN ('ENROLL','TRANSFERIN','UPDATE','DEENROLL')
+            WHERE LatestDate < '01-JUN-2024'
+        GROUP BY
+            SUBSCRIBER_ID
+    ) a
+LEFT JOIN (
+    SELECT
+        DEENROLLMENTCODE,
+        TRANSTYPE,
+        INSERTDATE,
+        SAC,
+        SUBSCRIBER_ID,
+        LEXID,
+        pra_address1 || ', ' || pra_city || ', ' || pra_state || ' ' || pra_zipcode AS full_address
+    FROM
+        LI_ebbpsm_ODS.AUDIT_TRANSACTION
+    WHERE
+        TRANSSTATUS = 'VALID'
+        AND TRANSTYPE IN ('ENROLL','TRANSFERIN','UPDATE','DEENROLL')
+) b ON
+    a.LatestDate = b.INSERTDATE
+    AND a.SUBSCRIBER_ID = b.SUBSCRIBER_ID
+LEFT JOIN 
+(SELECT SAC,
+        CONTACT_EMAIL,
+        DATA_MONTH FROM RankedEmails WHERE ROWNUM = 1) E ON B.SAC = E.SAC
+LEFT JOIN (
+    SELECT SAC, SACNAME FROM LI_ebbpsm_ODS.SAC
+) C ON b.sac = c.sac
+LEFT JOIN (
+    SELECT SAC, SPIN FROM LI_ebbpsm_ODS.SAC_SPIN
+) D ON c.sac = d.sac
+WHERE TRANSTYPE IN ('ENROLL','TRANSFERIN','UPDATE') AND d.SAC IN (863076,
+858041,
+841112,
+835146,
+824017,
+845080,
+849075,
+814009,
+823083,
+821069,
+811048,
+815110,
+825090,
+817089,
+833028,
+818018,
+855015,
+826040,
+852088,
+837080,
+840097,
+822027,
+847072,
+853081,
+839060,
+812041,
+846086,
+838054,
+832082,
+830092,
+851052,
+856036,
+831097,
+820058,
+828082,
+816044,
+813042,
+857036,
+829101,
+861070,
+810056,
+854109,
+848053,
+827071,
+842097,
+850068,
+819073,
+862053,
+834112,
+844134,
+836115,
+843040)
